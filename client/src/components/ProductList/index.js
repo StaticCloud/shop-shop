@@ -5,6 +5,8 @@ import ProductItem from '../ProductItem';
 import { QUERY_PRODUCTS } from '../../utils/queries';
 import spinner from '../../assets/spinner.gif';
 
+import { idbPromise } from '../../utils/helpers';
+
 import { useStoreContext } from '../../utils/GlobalState';
 import { UPDATE_PRODUCTS } from '../../utils/actions';
 
@@ -18,12 +20,25 @@ function ProductList() {
   useEffect(() => {
 	  // does data exist?
     if (data) {
-		dispatch({
-			type: UPDATE_PRODUCTS,
-			products: data.products
-		})
+      dispatch({
+        type: UPDATE_PRODUCTS,
+        products: data.products
+      })
+
+      // add products to idb
+      data.products.forEach((product) => {
+        idbPromise('products', 'put', product);
+      })
+      // if the useQuery() hook isn't trying to establish a connection (in other words, if we're offline)...
+     } else if (!loading) {
+      idbPromise('products', 'get').then((products) => {
+        dispatch({
+          type: UPDATE_PRODUCTS,
+          products: products
+        })
+      })
     }
-  }, [data, dispatch])
+  }, [data, loading, dispatch])
 
   // access the value of currentCategory from state (see CategoryMenu/index.js)
   function filterProducts() {
@@ -34,12 +49,10 @@ function ProductList() {
     return state.products.filter(product => product.category._id === currentCategory);
   }
 
-  const products = data?.products || [];
-
   return (
     <div className="my-2">
       <h2>Our Products:</h2>
-      {products.length ? (
+      {state.products.length ? (
         <div className="flex-row">
           {filterProducts().map((product) => (
             <ProductItem

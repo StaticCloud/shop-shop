@@ -5,6 +5,8 @@ import { useQuery } from '@apollo/client';
 import { QUERY_PRODUCTS } from '../utils/queries';
 import spinner from '../assets/spinner.gif';
 
+import { idbPromise } from '../utils/helpers';
+
 import { useStoreContext } from "../utils/GlobalState";
 import { 
   UPDATE_PRODUCTS,
@@ -29,17 +31,26 @@ function Detail() {
     const itemInCart = cart.find((cartItem) => cartItem._id === id)
 
     if (itemInCart) {
-		dispatch({
-			type: UPDATE_CART_QUANTITY,
-			_id: id,
-		  	purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
-		});
-	} else {
-		dispatch({
-		  	type: ADD_TO_CART,
-		  	product: { ...currentProduct, purchaseQuantity: 1 }
-		});
-	}
+      // update quantity of item if it's already in the cart
+      dispatch({
+        type: UPDATE_CART_QUANTITY,
+        _id: id,
+        purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
+      });
+
+      idbPromise('cart', 'put', {
+        ...itemInCart,
+        purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
+      });
+	  } else {
+      // if it doesn't already exist in the cart, add it
+      dispatch({
+          type: ADD_TO_CART,
+          product: { ...currentProduct, purchaseQuantity: 1 }
+      });
+
+      idbPromise('cart', 'put', { ...currentProduct, purchaseQuantity: 1 });
+	  }
   }
 
   const removeFromCart = () => {
@@ -47,6 +58,8 @@ function Detail() {
 		  type: REMOVE_FROM_CART,
 		  _id: currentProduct._id
 	  })
+
+    idbPromise('cart', 'delete', { ...currentProduct });
   }
 
   useEffect(() => {
@@ -60,9 +73,21 @@ function Detail() {
         type: UPDATE_PRODUCTS,
         products: data.products
       })
+
+      data.products.forEach((product) => {
+        idbPromise('products', 'put', product);
+      });
+    // if we're offline, load product data to the global object from idb
+    } else if (!loading) {
+      idbPromise('products', 'get').then((indexedProducts) => {
+        dispatch({
+          type: UPDATE_PRODUCTS,
+          products: indexedProducts
+        });
+      });
     }
     // this is what we call a dependency array
-  }, [products, data, dispatch, id]);
+  }, [products, loading, data, dispatch, id]);
 
   return (
     <>
