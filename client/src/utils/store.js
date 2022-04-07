@@ -1,4 +1,6 @@
+// import the configure store object from the redux toolkit
 import { configureStore } from '@reduxjs/toolkit';
+// as well as a our reducers
 import categoriesReducer from './slices/categories';
 import productsReducer from './slices/products';
 import currentCategoryReducer from './slices/currentCategory';

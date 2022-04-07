@@ -7,11 +7,8 @@ import spinner from '../../assets/spinner.gif';
 
 import { idbPromise } from '../../utils/helpers';
 
-import { useStoreContext } from '../../utils/GlobalState';
-import { UPDATE_PRODUCTS } from '../../utils/actions';
-
+// selector, dispatch, and products action
 import { useSelector, useDispatch } from 'react-redux';
-
 import { updateProducts } from '../../utils/slices/products'
 
 function ProductList() {
@@ -45,6 +42,7 @@ function ProductList() {
     }
   }, [data, loading, dispatch])
 
+  // filter the products based on the current category
   function filterProducts() {
     if (!currentCategory) {
       return products;

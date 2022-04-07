@@ -20,8 +20,7 @@ import Nav from './components/Nav';
 import OrderHistory from './pages/OrderHistory';
 import Success from './pages/Success';
 
-import { StoreProvider } from './utils/GlobalState';
-
+// import the redux provider object
 import { Provider } from 'react-redux';
 
 const httpLink = createHttpLink({
@@ -48,6 +47,7 @@ function App() {
 	<ApolloProvider client={client}>
 	  <Router>
 		<div>
+			{/* set the store property of the provider to our store object */}
 		  <Provider store={store}>
 			<Nav />
 			<Switch>
