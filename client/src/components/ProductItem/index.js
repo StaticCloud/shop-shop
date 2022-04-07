@@ -8,7 +8,7 @@ import { ADD_TO_CART, UPDATE_CART_QUANTITY } from '../../utils/actions';
 import { idbPromise } from '../../utils/helpers';
 
 function ProductItem(item) {
-  const [state, dispatch] = useStoreContext();
+  //const [state, dispatch] = useStoreContext();
 
   const {
     image,
@@ -18,33 +18,33 @@ function ProductItem(item) {
     quantity
   } = item;
 
-  const { cart } = state;
+  // const { cart } = state;
 
-  const addToCart = () => {
-    const itemInCart = cart.find((cartItem) => cartItem._id === _id);
+  // const addToCart = () => {
+  //   const itemInCart = cart.find((cartItem) => cartItem._id === _id);
 
-    // if the item we're adding already exists in the cart...
-    if (itemInCart) {
-      // update the respective item's purchase quantity
-      dispatch({
-        type: UPDATE_CART_QUANTITY,
-        _id: _id,
-        purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
-      });
+  //   // if the item we're adding already exists in the cart...
+  //   if (itemInCart) {
+  //     // update the respective item's purchase quantity
+  //     dispatch({
+  //       type: UPDATE_CART_QUANTITY,
+  //       _id: _id,
+  //       purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
+  //     });
 
-      idbPromise('cart', 'put', {
-        ...itemInCart,
-        purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
-      });
-    } else {
-      // otherwise simply add it into the cart
-      dispatch({
-        type: ADD_TO_CART,
-        product: { ...item, purchaseQuantity: 1 }
-      });
-      idbPromise('cart', 'put', { ...item, purchaseQuantity: 1 });
-    }
-  }
+  //     idbPromise('cart', 'put', {
+  //       ...itemInCart,
+  //       purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
+  //     });
+  //   } else {
+  //     // otherwise simply add it into the cart
+  //     dispatch({
+  //       type: ADD_TO_CART,
+  //       product: { ...item, purchaseQuantity: 1 }
+  //     });
+  //     idbPromise('cart', 'put', { ...item, purchaseQuantity: 1 });
+  //   }
+  // }
 
   return (
     <div className="card px-1 py-1">
@@ -59,7 +59,8 @@ function ProductItem(item) {
         <div>{quantity} {pluralize("item", quantity)} in stock</div>
         <span>${price}</span>
       </div>
-      <button onClick={addToCart}>Add to cart</button>
+      {/* remember to add onClick={addToCart}*/}
+      <button>Add to cart</button>
     </div>
   );
 }

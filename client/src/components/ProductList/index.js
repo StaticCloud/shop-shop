@@ -10,20 +10,30 @@ import { idbPromise } from '../../utils/helpers';
 import { useStoreContext } from '../../utils/GlobalState';
 import { UPDATE_PRODUCTS } from '../../utils/actions';
 
-function ProductList() {
-  const [state, dispatch] = useStoreContext();
+import { useSelector, useDispatch } from 'react-redux';
 
-  const { currentCategory } = state;
+import { updateProducts } from '../../utils/slices/products'
+
+function ProductList() {
+  // select the product
+  const productSelector = useSelector(state => state.products);
+
+  console.log(useSelector(state => state))
+
+  // get the products array
+  const products = productSelector.products;
+
+  // const { currentCategory } = state;
 
   const { loading, data } = useQuery(QUERY_PRODUCTS);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
 	  // does data exist?
     if (data) {
-      dispatch({
-        type: UPDATE_PRODUCTS,
-        products: data.products
-      })
+      // load the data into the global products array
+      dispatch(updateProducts(data.products))
 
       // add products to idb
       data.products.forEach((product) => {
@@ -32,29 +42,28 @@ function ProductList() {
       // if the useQuery() hook isn't trying to establish a connection (in other words, if we're offline)...
      } else if (!loading) {
       idbPromise('products', 'get').then((products) => {
-        dispatch({
-          type: UPDATE_PRODUCTS,
-          products: products
-        })
+        dispatch(updateProducts(products))
       })
     }
   }, [data, loading, dispatch])
 
   // access the value of currentCategory from state (see CategoryMenu/index.js)
   function filterProducts() {
-    if (!currentCategory) {
-      return state.products;
-    }
+    // if (!currentCategory) {
+    //   return products;
+    // }
 
-    return state.products.filter(product => product.category._id === currentCategory);
+    // return products.filter(product => product.category._id === currentCategory);
   }
+
+  console.log(products)
 
   return (
     <div className="my-2">
       <h2>Our Products:</h2>
-      {state.products.length ? (
+      {products ? (
         <div className="flex-row">
-          {filterProducts().map((product) => (
+          {products.map((product) => (
             <ProductItem
               key={product._id}
               _id={product._id}
