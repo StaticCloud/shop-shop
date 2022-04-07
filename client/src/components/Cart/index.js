@@ -12,10 +12,20 @@ import { loadStripe } from '@stripe/stripe-js';
 
 import { useLazyQuery } from '@apollo/client';
 
+import { useSelector, useDispatch } from 'react-redux';
+
+import { addToCart, toggleCart } from '../../utils/slices/cart';
+
 const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
 
 const Cart = () => {
-    const [state, dispatch] = useStoreContext();
+    // access the cart from the global state
+    const cartSelector = useSelector(state => state.cartInfo)
+
+    const dispatch = useDispatch();
+
+    const cart = cartSelector.cart;
+    const cartOpen = cartSelector.cartOpen;
 
     const [getCheckout, { data }] = useLazyQuery(QUERY_CHECKOUT);
 
@@ -30,10 +40,10 @@ const Cart = () => {
         }
 
         // load cart from idb if the state cart object is empty
-        if (!state.cart.length) {
+        if (!cart.length) {
             getCart();
         }
-    }, [state.cart.length, dispatch]);
+    }, [cart.length, dispatch]);
 
     useEffect(() => {
         if (data) {
@@ -43,13 +53,9 @@ const Cart = () => {
         }
     }, [data])
 
-    function toggleCart() {
-        dispatch({ type: TOGGLE_CART });
-    }
-
     function calculateTotal() {
         let sum = 0;
-        state.cart.forEach(item => {
+        cart.forEach(item => {
             sum += item.price * item.purchaseQuantity;
         })
         return sum.toFixed(2);
@@ -58,7 +64,7 @@ const Cart = () => {
     function submitCheckout() {
         const productIds = [];
 
-        state.cart.forEach((item) => {
+        cart.forEach((item) => {
             for (let i = 0; i < item.purchaseQuantity; i++) {
                 productIds.push(item._id);
             }
@@ -69,10 +75,14 @@ const Cart = () => {
         })
     }
 
+    function toggle() {
+        dispatch(toggleCart())
+    }
+
     // 22.2.6
-    if (!state.cartOpen) {
+    if (!cartOpen) {
         return (
-            <div className="cart-closed" onClick={toggleCart}>
+            <div className="cart-closed" onClick={toggle}>
                 <span
                     role="img"
                     aria-label="trash">🛒</span>
@@ -82,11 +92,11 @@ const Cart = () => {
 
     return (
       <div className="cart">
-        <div className="close" onClick={toggleCart}>[close]</div>
+        <div className="close" onClick={toggle}>[close]</div>
         <h2>Shopping Cart</h2>
-        {state.cart.length ? (
+        {cart.length ? (
             <div>
-                {state.cart.map(item => (
+                {cart.map(item => (
                     <CartItem key={item._id} item={item}/>
                 ))}
                 <div className="flex-row space-between">
