@@ -15,15 +15,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { updateProducts } from '../../utils/slices/products'
 
 function ProductList() {
-  // select the product
+  // selectors
   const productSelector = useSelector(state => state.products);
+  const currentCategorySelector = useSelector(state => state.currentCategory);
 
-  console.log(useSelector(state => state))
-
-  // get the products array
+  // get the products array and the current category
   const products = productSelector.products;
-
-  // const { currentCategory } = state;
+  const currentCategory = currentCategorySelector.currentCategory;
 
   const { loading, data } = useQuery(QUERY_PRODUCTS);
 
@@ -47,23 +45,20 @@ function ProductList() {
     }
   }, [data, loading, dispatch])
 
-  // access the value of currentCategory from state (see CategoryMenu/index.js)
   function filterProducts() {
-    // if (!currentCategory) {
-    //   return products;
-    // }
+    if (!currentCategory) {
+      return products;
+    }
 
-    // return products.filter(product => product.category._id === currentCategory);
+    return products.filter(product => product.category._id === currentCategory);
   }
-
-  console.log(products)
 
   return (
     <div className="my-2">
       <h2>Our Products:</h2>
       {products ? (
         <div className="flex-row">
-          {products.map((product) => (
+          {filterProducts().map((product) => (
             <ProductItem
               key={product._id}
               _id={product._id}

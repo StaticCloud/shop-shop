@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { QUERY_CATEGORIES } from '../../utils/queries';
-
 import { idbPromise } from '../../utils/helpers';
 
 import { useSelector, useDispatch } from 'react-redux';
 
 import { updateCategories } from '../../utils/slices/categories'
+import { setCurrentCategory } from '../../utils/slices/currentCategory';
 
 function CategoryMenu() {
   // reference our dispatch function
@@ -44,7 +44,8 @@ function CategoryMenu() {
 
   // run the update current category action
   const handleClick = id => {
-	  
+	  // set the current category using our dispatch reference
+	  dispatch(setCurrentCategory(id))
   }
 
   return (
