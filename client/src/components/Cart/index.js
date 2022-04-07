@@ -14,14 +14,13 @@ import { useLazyQuery } from '@apollo/client';
 
 import { useSelector, useDispatch } from 'react-redux';
 
-import { addToCart, toggleCart } from '../../utils/slices/cart';
+import { toggleCart, addMultipleToCart } from '../../utils/slices/cart';
 
 const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
 
 const Cart = () => {
     // access the cart from the global state
     const cartSelector = useSelector(state => state.cartInfo)
-
     const dispatch = useDispatch();
 
     const cart = cartSelector.cart;
@@ -32,11 +31,8 @@ const Cart = () => {
     useEffect(() => {
         // load cart from idb
         async function getCart() {
-            const cart = await idbPromise('cart', 'get');
-            dispatch({ 
-                type: ADD_MULTIPLE_TO_CART,
-                products: [...cart]
-            })
+            const idbCart = await idbPromise('cart', 'get');
+            dispatch(addMultipleToCart({ products: [...idbCart] }))
         }
 
         // load cart from idb if the state cart object is empty

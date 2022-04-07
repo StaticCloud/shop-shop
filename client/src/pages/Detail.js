@@ -7,72 +7,65 @@ import spinner from '../assets/spinner.gif';
 
 import { idbPromise } from '../utils/helpers';
 
-import { useStoreContext } from "../utils/GlobalState";
-import { 
-  UPDATE_PRODUCTS,
-  REMOVE_FROM_CART,
-  ADD_TO_CART,
-  UPDATE_CART_QUANTITY
-} from "../utils/actions";
-
 import Cart from '../components/Cart';
 
+import { updateQuantity, removeFromCart, addToCart } from '../utils/slices/cart';
+import { updateProducts } from '../utils/slices/products';
+import { useSelector, useDispatch } from 'react-redux';
+
 function Detail() {
-  const [state, dispatch] = useStoreContext();
+  // get cart and products selector
+  const cartSelector = useSelector(state => state.cartInfo);
+  const productSelector = useSelector(state => state.products);
+
+  const products = productSelector.products;
+  const cart = cartSelector.cart;
+
+  console.log(cartSelector)
+  console.log(cart);
+
+  const dispatch = useDispatch();
+
   const { id } = useParams();
 
   const [currentProduct, setCurrentProduct] = useState({});
 
   const { loading, data } = useQuery(QUERY_PRODUCTS);
 
-  const { products, cart } = state;
-
-  const addToCart = () => {
+  const addItemToCart = () => {
     const itemInCart = cart.find((cartItem) => cartItem._id === id)
 
     if (itemInCart) {
       // update quantity of item if it's already in the cart
-      dispatch({
-        type: UPDATE_CART_QUANTITY,
-        _id: id,
-        purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
-      });
-
+      dispatch(updateQuantity({ _id: id, purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1 }))
+      
       idbPromise('cart', 'put', {
         ...itemInCart,
         purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
       });
 	  } else {
       // if it doesn't already exist in the cart, add it
-      dispatch({
-          type: ADD_TO_CART,
-          product: { ...currentProduct, purchaseQuantity: 1 }
-      });
+      dispatch(addToCart({ 
+        product: { ...currentProduct, purchaseQuantity: 1 }
+      }));
 
       idbPromise('cart', 'put', { ...currentProduct, purchaseQuantity: 1 });
 	  }
   }
 
-  const removeFromCart = () => {
-	  dispatch({
-		  type: REMOVE_FROM_CART,
-		  _id: currentProduct._id
-	  })
-
+  const removeItemFromCart = () => {
+    dispatch(removeFromCart({ _id: id }))
     idbPromise('cart', 'delete', { ...currentProduct });
   }
 
   useEffect(() => {
     // is there data in our global state's products array?
-    if (products.length) {
+    if (products) {
       setCurrentProduct(products.find((product) => product._id === id));
     } else if (data) {
       // load products into the global object
       // if this is the first page the user visits, there will be no products saved in the global state and the first statement will not work, which is why we have this statement
-      dispatch({
-        type: UPDATE_PRODUCTS,
-        products: data.products
-      })
+      dispatch(updateProducts(data.products))
 
       data.products.forEach((product) => {
         idbPromise('products', 'put', product);
@@ -80,14 +73,11 @@ function Detail() {
     // if we're offline, load product data to the global object from idb
     } else if (!loading) {
       idbPromise('products', 'get').then((indexedProducts) => {
-        dispatch({
-          type: UPDATE_PRODUCTS,
-          products: indexedProducts
-        });
+        dispatch(updateProducts(indexedProducts))
       });
     }
     // this is what we call a dependency array
-  }, [products, loading, data, dispatch, id]);
+  }, [cart, products, loading, data, dispatch, id]);
 
   return (
     <>
@@ -101,12 +91,12 @@ function Detail() {
 
           <p>
             <strong>Price:</strong>${currentProduct.price}{' '}
-            <button onClick={addToCart}>Add to Cart</button>
+            <button onClick={addItemToCart}>Add to Cart</button>
             <button 
-				// disable if the item doesn't exist inside the cart
-				disabled={!cart.find(p => p._id === currentProduct._id)}
-				onClick={removeFromCart}
-				>Remove from Cart</button>
+				    // disable if the item doesn't exist inside the cart
+            disabled={!cart.find(p => p._id === id)}
+            onClick={removeItemFromCart}
+            >Remove from Cart</button>
           </p>
 
           <img

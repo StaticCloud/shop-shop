@@ -9,7 +9,7 @@ const productSlice = createSlice({
         updateProducts: (state, action) => {
             return {
                 ...state,
-                products: [...action.payload]
+                products: [ ...action.payload ]
             }
         }
     }

@@ -7,8 +7,15 @@ import { ADD_TO_CART, UPDATE_CART_QUANTITY } from '../../utils/actions';
 
 import { idbPromise } from '../../utils/helpers';
 
+import { addToCart, updateQuantity } from '../../utils/slices/cart';
+import { useSelector, useDispatch } from 'react-redux';
+
 function ProductItem(item) {
-  //const [state, dispatch] = useStoreContext();
+  // access the cart from the global state
+  const cartSelector = useSelector(state => state.cartInfo)
+  const dispatch = useDispatch();
+
+  const cart = cartSelector.cart;
 
   const {
     image,
@@ -18,33 +25,29 @@ function ProductItem(item) {
     quantity
   } = item;
 
-  // const { cart } = state;
+  const addItemToCart = () => {
+    const itemInCart = cart.find((cartItem) => cartItem._id === _id);
 
-  // const addToCart = () => {
-  //   const itemInCart = cart.find((cartItem) => cartItem._id === _id);
+    // if the item we're adding already exists in the cart...
+    if (itemInCart) {
+      // update the respective item's purchase quantity
+      dispatch(updateQuantity({ 
+        _id: _id, 
+        purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1 
+      }))
 
-  //   // if the item we're adding already exists in the cart...
-  //   if (itemInCart) {
-  //     // update the respective item's purchase quantity
-  //     dispatch({
-  //       type: UPDATE_CART_QUANTITY,
-  //       _id: _id,
-  //       purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
-  //     });
-
-  //     idbPromise('cart', 'put', {
-  //       ...itemInCart,
-  //       purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
-  //     });
-  //   } else {
-  //     // otherwise simply add it into the cart
-  //     dispatch({
-  //       type: ADD_TO_CART,
-  //       product: { ...item, purchaseQuantity: 1 }
-  //     });
-  //     idbPromise('cart', 'put', { ...item, purchaseQuantity: 1 });
-  //   }
-  // }
+      idbPromise('cart', 'put', {
+        ...itemInCart,
+        purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
+      });
+    } else {
+      // otherwise simply add it into the cart
+      dispatch(addToCart({ 
+        product: { ...item, purchaseQuantity: 1 } 
+      }))
+      idbPromise('cart', 'put', { ...item, purchaseQuantity: 1 });
+    }
+  }
 
   return (
     <div className="card px-1 py-1">
@@ -59,8 +62,7 @@ function ProductItem(item) {
         <div>{quantity} {pluralize("item", quantity)} in stock</div>
         <span>${price}</span>
       </div>
-      {/* remember to add onClick={addToCart}*/}
-      <button>Add to cart</button>
+      <button onClick={addItemToCart}>Add to cart</button>
     </div>
   );
 }
